@@ -1,13 +1,57 @@
-# Churn Prediction MLOps
+# Telco Customer Churn Prediction
 
-## Overview
-Project to predict customer churn using machine learning.
+## 📖 Overview
 
-## Status
-🚧 In progress
+Este projeto tem como objetivo prever o churn de clientes (cancelamento de serviço) utilizando técnicas de Machine Learning.
 
-## Next Steps
-- EDA
-- Baseline model
-- Neural network
-- API
+O churn é um problema crítico de negócio, pois a perda de clientes impacta diretamente a receita. O modelo desenvolvido permite identificar clientes com alto risco de evasão, possibilitando ações preventivas.
+
+O projeto inclui:
+- Análise exploratória dos dados (EDA)
+- Modelos baseline e avançados
+- Comparação de algoritmos
+- Ajuste de threshold
+- API para inferência
+
+## 📊 Dataset
+
+O dataset utilizado é o Telco Customer Churn, contendo informações sobre clientes de telecomunicações.
+
+Principais variáveis:
+- Informações demográficas
+- Tipo de contrato
+- Serviços contratados
+- Valor mensal
+- Tempo de permanência
+- Variável alvo: `Churn Value` (0 = não saiu, 1 = saiu)
+
+Foi aplicada prevenção de data leakage removendo colunas como:
+- Churn Label
+- Churn Score
+- Churn Reason
+
+## 🏗️ Project Structure
+telco-churn-prediction/
+│
+├── data/              # Dataset
+├── docs/              # Documentação (Model Card)
+├── models/            # Modelos treinados
+├── notebooks/         # Análises exploratórias
+├── src/               # Código principal
+│   ├── data.py
+│   ├── train.py
+│   ├── evaluate.py
+│   └── api.py
+├── tests/             # Testes automatizados
+├── pyproject.toml
+└── README.md
+
+
+## ⚙️ Setup
+
+Clone o repositório:
+
+```bash
+git clone https://github.com/SarahNovais25/telco-churn-prediction.git
+cd telco-churn-prediction
+
