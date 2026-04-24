@@ -11,4 +11,4 @@ data/raw/.DS_Store
 *.egg-info/
 mlruns/
 __pycache__/
-.venv/
+.venv/.DS_Store
