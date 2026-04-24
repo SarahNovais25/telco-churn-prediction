@@ -5,13 +5,13 @@ lint:
 	ruff check .
 
 test:
-	pytest
+	python3 -m pytest
 
 run:
 	uvicorn src.api:app --reload
 
 train:
-	python src/train.py
+	python3 src/train.py
 
 mlflow:
 	mlflow ui
