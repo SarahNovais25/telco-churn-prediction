@@ -8,3 +8,7 @@ __pycache__/
 mlruns/
 data/raw/.DS_Store
 .DS_Store
+*.egg-info/
+mlruns/
+__pycache__/
+.venv/
