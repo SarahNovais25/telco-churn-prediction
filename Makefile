@@ -8,7 +8,7 @@ test:
 	python3 -m pytest
 
 run:
-	uvicorn src.api:app --reload
+	python3 -m uvicorn src.api:app --reload
 
 train:
 	python3 src/train.py
