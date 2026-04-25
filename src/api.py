@@ -11,6 +11,8 @@ app = FastAPI(title="Telco Churn Prediction API")
 MODEL_PATH = Path("models/best_model.pkl")
 model = joblib.load(MODEL_PATH)
 
+THRESHOLD = 0.4
+
 
 class CustomerData(BaseModel):
     gender: str
@@ -69,10 +71,10 @@ def predict(customer: CustomerData):
     }])
 
     prob = model.predict_proba(row)[0][1]
-    pred = int(prob >= 0.4)
+    pred = int(prob >= THRESHOLD)
 
     return {
         "churn_probability": round(float(prob), 4),
         "prediction": pred,
-        "threshold": 0.4,
+        "threshold": THRESHOLD
     }
