@@ -1,52 +1,214 @@
-import logging
-from pathlib import Path
-
+import pandas as pd
 import joblib
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.model_selection import train_test_split
 
-from src.data import load_data, preprocess_data
+from sklearn.model_selection import train_test_split, StratifiedKFold, cross_validate
+from sklearn.pipeline import Pipeline
+from sklearn.compose import ColumnTransformer
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
+from sklearn.impute import SimpleImputer
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+from sklearn.linear_model import LogisticRegression
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import (
+    RandomForestClassifier,
+    GradientBoostingClassifier,
+)
+from sklearn.neural_network import MLPClassifier
 
-MODEL_PATH = Path("models/random_forest_churn.joblib")
+from sklearn.metrics import (
+    accuracy_score,
+    precision_score,
+    recall_score,
+    f1_score,
+    roc_auc_score,
+)
 
 
-def train_model():
-    df = load_data("data/Telco_customer_churn.xlsx")
-    X, y = preprocess_data(df)
+DATA_PATH = "data/Telco_customer_churn.xlsx"
+TARGET = "Churn Value"
 
-    X_train, X_test, y_train, y_test = train_test_split(
-        X,
-        y,
-        test_size=0.2,
+import pandas as pd
+import numpy as np
+
+DATA_PATH = "data/Telco_customer_churn.xlsx"
+TARGET = "Churn Value"
+
+def load_data():
+    df = pd.read_excel(DATA_PATH)
+
+    leakage_cols = [
+        "Churn Label",
+        "Churn Score",
+        "Churn Reason"
+    ]
+
+    df = df.drop(columns=[col for col in leakage_cols if col in df.columns])
+
+    df = df.replace(" ", np.nan)
+
+    X = df.drop(columns=[TARGET])
+    y = df[TARGET]
+
+    return X, y
+
+
+def build_preprocessor(X):
+    numeric_features = X.select_dtypes(include=["int64", "float64"]).columns.tolist()
+
+    categorical_features = X.select_dtypes(
+        include=["object", "category", "bool"]
+    ).columns.tolist()
+
+    numeric_pipeline = Pipeline(
+        steps=[
+            ("imputer", SimpleImputer(strategy="median")),
+            ("scaler", StandardScaler()),
+        ]
+    )
+
+    categorical_pipeline = Pipeline(
+        steps=[
+            ("imputer", SimpleImputer(strategy="most_frequent")),
+            ("encoder", OneHotEncoder(handle_unknown="ignore")),
+        ]
+    )
+
+    preprocessor = ColumnTransformer(
+        transformers=[
+            ("num", numeric_pipeline, numeric_features),
+            ("cat", categorical_pipeline, categorical_features),
+        ]
+    )
+
+    return preprocessor
+
+
+def get_models():
+    return {
+        "logistic_regression": LogisticRegression(
+            max_iter=1000,
+            class_weight="balanced",
+            random_state=42,
+        ),
+        "decision_tree": DecisionTreeClassifier(
+            max_depth=5,
+            class_weight="balanced",
+            random_state=42,
+        ),
+        "random_forest": RandomForestClassifier(
+            n_estimators=300,
+            max_depth=10,
+            class_weight="balanced",
+            random_state=42,
+        ),
+        "gradient_boosting": GradientBoostingClassifier(
+            n_estimators=300,
+            learning_rate=0.05,
+            max_depth=3,
+            random_state=42,
+        ),
+        "mlp_classifier": MLPClassifier(
+            hidden_layer_sizes=(64, 32),
+            max_iter=500,
+            random_state=42,
+        ),
+    }
+
+
+def run_cross_validation(X, y):
+    preprocessor = build_preprocessor(X)
+    models = get_models()
+
+    cv = StratifiedKFold(
+        n_splits=5,
+        shuffle=True,
         random_state=42,
-        stratify=y,
     )
 
-    model = RandomForestClassifier(
-        n_estimators=200,
-        max_depth=10,
-        random_state=42,
-        class_weight="balanced",
+    scoring = {
+        "accuracy": "accuracy",
+        "precision": "precision",
+        "recall": "recall",
+        "f1": "f1",
+        "roc_auc": "roc_auc",
+    }
+
+    results = []
+
+    for model_name, model in models.items():
+        print(f"Running cross validation for {model_name}...")
+
+        pipeline = Pipeline(
+            steps=[
+                ("preprocessor", preprocessor),
+                ("model", model),
+            ]
+        )
+
+        scores = cross_validate(
+            pipeline,
+            X,
+            y,
+            cv=cv,
+            scoring=scoring,
+            return_train_score=False,
+        )
+
+        results.append(
+            {
+                "model": model_name,
+                "accuracy_mean": scores["test_accuracy"].mean(),
+                "precision_mean": scores["test_precision"].mean(),
+                "recall_mean": scores["test_recall"].mean(),
+                "f1_mean": scores["test_f1"].mean(),
+                "roc_auc_mean": scores["test_roc_auc"].mean(),
+                "roc_auc_std": scores["test_roc_auc"].std(),
+            }
+        )
+
+    results_df = pd.DataFrame(results)
+    results_df = results_df.sort_values(by="roc_auc_mean", ascending=False)
+
+    return results_df
+
+
+def train_best_model(X, y, best_model_name):
+    models = get_models()
+    preprocessor = build_preprocessor(X)
+
+    best_model = models[best_model_name]
+
+    pipeline = Pipeline(
+        steps=[
+            ("preprocessor", preprocessor),
+            ("model", best_model),
+        ]
     )
 
-    model.fit(X_train, y_train)
+    pipeline.fit(X, y)
 
-    MODEL_PATH.parent.mkdir(parents=True, exist_ok=True)
-    joblib.dump(
-        {
-            "model": model,
-            "columns": X.columns.tolist(),
-        },
-        MODEL_PATH,
-    )
+    joblib.dump(pipeline, "models/best_model.pkl")
 
-    logger.info("Model saved at %s", MODEL_PATH)
+    print(f"\nBest model trained on full dataset: {best_model_name}")
+    print("Saved at: models/best_model.pkl")
 
-    return model, X_test, y_test
+
+def main():
+    X, y = load_data()
+
+    results_df = run_cross_validation(X, y)
+
+    print("\nCross Validation Results:")
+    print(results_df)
+
+    results_df.to_csv("models/model_comparison_cv.csv", index=False)
+
+    best_model_name = results_df.iloc[0]["model"]
+
+    train_best_model(X, y, best_model_name)
+
+    print("\nComparison saved at: models/model_comparison_cv.csv")
 
 
 if __name__ == "__main__":
-    train_model()
+    main()
