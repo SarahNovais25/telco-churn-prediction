@@ -5,13 +5,11 @@ import pandas as pd
 from fastapi import FastAPI
 from pydantic import BaseModel
 
+
 app = FastAPI(title="Telco Churn Prediction API")
 
-MODEL_PATH = Path("models/random_forest_churn.joblib")
-
-artifact = joblib.load(MODEL_PATH)
-model = artifact["model"]
-columns = artifact["columns"]
+MODEL_PATH = Path("models/best_model.pkl")
+model = joblib.load(MODEL_PATH)
 
 
 class CustomerData(BaseModel):
@@ -67,11 +65,8 @@ def predict(customer: CustomerData):
         "Paperless Billing": customer.paperless_billing,
         "Payment Method": customer.payment_method,
         "Monthly Charges": customer.monthly_charges,
-        "Total Charges": customer.total_charges
+        "Total Charges": customer.total_charges,
     }])
-
-    row = pd.get_dummies(row)
-    row = row.reindex(columns=columns, fill_value=0)
 
     prob = model.predict_proba(row)[0][1]
     pred = int(prob >= 0.4)
@@ -79,5 +74,5 @@ def predict(customer: CustomerData):
     return {
         "churn_probability": round(float(prob), 4),
         "prediction": pred,
-        "threshold": 0.4
+        "threshold": 0.4,
     }
