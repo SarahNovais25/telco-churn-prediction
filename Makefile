@@ -2,8 +2,9 @@ install:
 	pip install -e .
 
 lint:
-	ruff check .
-
+	python3 -m ruff format .
+	python3 -m ruff check . --fix
+	
 test:
 	python3 -m pytest
 

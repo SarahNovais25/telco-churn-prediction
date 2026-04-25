@@ -5,7 +5,6 @@ import pandas as pd
 from fastapi import FastAPI
 from pydantic import BaseModel
 
-
 app = FastAPI(title="Telco Churn Prediction API")
 
 MODEL_PATH = Path("models/best_model.pkl")
@@ -48,33 +47,33 @@ def health():
 
 @app.post("/predict")
 def predict(customer: CustomerData):
-    row = pd.DataFrame([{
-        "Gender": customer.gender,
-        "Senior Citizen": customer.senior_citizen,
-        "Partner": customer.partner,
-        "Dependents": customer.dependents,
-        "Tenure Months": customer.tenure_months,
-        "Phone Service": customer.phone_service,
-        "Multiple Lines": customer.multiple_lines,
-        "Internet Service": customer.internet_service,
-        "Online Security": customer.online_security,
-        "Online Backup": customer.online_backup,
-        "Device Protection": customer.device_protection,
-        "Tech Support": customer.tech_support,
-        "Streaming TV": customer.streaming_tv,
-        "Streaming Movies": customer.streaming_movies,
-        "Contract": customer.contract,
-        "Paperless Billing": customer.paperless_billing,
-        "Payment Method": customer.payment_method,
-        "Monthly Charges": customer.monthly_charges,
-        "Total Charges": customer.total_charges,
-    }])
+    row = pd.DataFrame(
+        [
+            {
+                "Gender": customer.gender,
+                "Senior Citizen": customer.senior_citizen,
+                "Partner": customer.partner,
+                "Dependents": customer.dependents,
+                "Tenure Months": customer.tenure_months,
+                "Phone Service": customer.phone_service,
+                "Multiple Lines": customer.multiple_lines,
+                "Internet Service": customer.internet_service,
+                "Online Security": customer.online_security,
+                "Online Backup": customer.online_backup,
+                "Device Protection": customer.device_protection,
+                "Tech Support": customer.tech_support,
+                "Streaming TV": customer.streaming_tv,
+                "Streaming Movies": customer.streaming_movies,
+                "Contract": customer.contract,
+                "Paperless Billing": customer.paperless_billing,
+                "Payment Method": customer.payment_method,
+                "Monthly Charges": customer.monthly_charges,
+                "Total Charges": customer.total_charges,
+            }
+        ]
+    )
 
     prob = model.predict_proba(row)[0][1]
     pred = int(prob >= THRESHOLD)
 
-    return {
-        "churn_probability": round(float(prob), 4),
-        "prediction": pred,
-        "threshold": THRESHOLD
-    }
+    return {"churn_probability": round(float(prob), 4), "prediction": pred, "threshold": THRESHOLD}

@@ -1,18 +1,15 @@
-import pandas as pd
-import numpy as np
 import joblib
-
-from sklearn.model_selection import StratifiedKFold, cross_validate
-from sklearn.pipeline import Pipeline
+import numpy as np
+import pandas as pd
 from sklearn.compose import ColumnTransformer
-from sklearn.preprocessing import OneHotEncoder, StandardScaler
+from sklearn.ensemble import GradientBoostingClassifier, RandomForestClassifier
 from sklearn.impute import SimpleImputer
-
 from sklearn.linear_model import LogisticRegression
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
+from sklearn.model_selection import StratifiedKFold, cross_validate
 from sklearn.neural_network import MLPClassifier
-
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
+from sklearn.tree import DecisionTreeClassifier
 
 DATA_PATH = "data/Telco_customer_churn.xlsx"
 TARGET = "Churn Value"
@@ -46,8 +43,7 @@ def load_data():
 
     df = df.drop(columns=[c for c in remove_cols if c in df.columns])
 
-    # clean missing values
-    df = df.replace(r"^\s*$", np.nan, regex=True)
+    df = df.replace(r"^\s*$", np.nan, regex=True).infer_objects(copy=False)
 
     X = df.drop(columns=[TARGET])
     y = df[TARGET]
@@ -56,13 +52,9 @@ def load_data():
 
 
 def build_preprocessor(X):
-    numeric_features = X.select_dtypes(
-        include=["int64", "float64"]
-    ).columns.tolist()
+    numeric_features = X.select_dtypes(include=["int64", "float64"]).columns.tolist()
 
-    categorical_features = X.select_dtypes(
-        include=["object", "category", "bool"]
-    ).columns.tolist()
+    categorical_features = X.select_dtypes(include=["object", "category", "bool"]).columns.tolist()
 
     numeric_pipeline = Pipeline(
         steps=[
@@ -95,27 +87,23 @@ def get_models():
             class_weight="balanced",
             random_state=42,
         ),
-
         "decision_tree": DecisionTreeClassifier(
             max_depth=5,
             class_weight="balanced",
             random_state=42,
         ),
-
         "random_forest": RandomForestClassifier(
             n_estimators=300,
             max_depth=10,
             class_weight="balanced",
             random_state=42,
         ),
-
         "gradient_boosting": GradientBoostingClassifier(
             n_estimators=300,
             learning_rate=0.05,
             max_depth=3,
             random_state=42,
         ),
-
         "mlp_classifier": MLPClassifier(
             hidden_layer_sizes=(64, 32),
             max_iter=500,
@@ -164,21 +152,20 @@ def run_cross_validation(X, y):
             n_jobs=-1,
         )
 
-        results.append({
-            "model": model_name,
-            "accuracy_mean": scores["test_accuracy"].mean(),
-            "precision_mean": scores["test_precision"].mean(),
-            "recall_mean": scores["test_recall"].mean(),
-            "f1_mean": scores["test_f1"].mean(),
-            "roc_auc_mean": scores["test_roc_auc"].mean(),
-            "roc_auc_std": scores["test_roc_auc"].std(),
-        })
+        results.append(
+            {
+                "model": model_name,
+                "accuracy_mean": scores["test_accuracy"].mean(),
+                "precision_mean": scores["test_precision"].mean(),
+                "recall_mean": scores["test_recall"].mean(),
+                "f1_mean": scores["test_f1"].mean(),
+                "roc_auc_mean": scores["test_roc_auc"].mean(),
+                "roc_auc_std": scores["test_roc_auc"].std(),
+            }
+        )
 
     results_df = pd.DataFrame(results)
-    results_df = results_df.sort_values(
-        by="roc_auc_mean",
-        ascending=False
-    )
+    results_df = results_df.sort_values(by="roc_auc_mean", ascending=False)
 
     return results_df
 
@@ -212,10 +199,7 @@ def main():
     print("\nCross Validation Results:")
     print(results_df)
 
-    results_df.to_csv(
-        "models/model_comparison_cv.csv",
-        index=False
-    )
+    results_df.to_csv("models/model_comparison_cv.csv", index=False)
 
     best_model_name = results_df.iloc[0]["model"]
 
