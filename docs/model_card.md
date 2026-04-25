@@ -5,8 +5,8 @@
 ## 📌 Model Details
 
 - **Project Name:** Telco Customer Churn Prediction
-- **Author:** Sarah Novais
-- **Model Type:** Random Forest Classifier
+- **Author:** 
+- **Model Type:** Gradient Boosting Classifier
 - **Primary Objective:** Predict customer churn probability.
 
 ### Alternative Models Tested
@@ -14,54 +14,56 @@
 - Dummy Classifier
 - Logistic Regression
 - Decision Tree
+- Random Forest
+- MLPClassifier
 - PyTorch MLP Neural Network
 
 ---
 
 ## 🎯 Intended Use
 
-Este modelo foi desenvolvido para apoiar equipes de negócio na identificação de clientes com risco de cancelamento.
+This model was developed to support business teams in identifying customers at risk of churn.
 
-### Casos de uso recomendados
+### Recommended Use Cases
 
-- Campanhas de retenção
-- Priorização de atendimento
-- Análise de risco de churn
-- Apoio à tomada de decisão comercial
+- Retention campaigns
+- Customer prioritization
+- Churn risk analysis
+- Commercial decision support
 
-### Não recomendado para
+### Not Recommended For
 
-- Decisões automáticas sem revisão humana
-- Penalização de clientes
-- Avaliação individual sensível
-- Uso fora do contexto de telecom sem revalidação
+- Fully automated decisions without human review
+- Penalizing customers
+- Sensitive individual assessments
+- Use outside the telecom context without revalidation
 
 ---
 
 ## 📊 Training Data
 
-Dataset utilizado: **Telco Customer Churn Dataset**
+Dataset used: **Telco Customer Churn Dataset**
 
-### Contém
+### Contains
 
-- Dados demográficos
-- Tipo de contrato
-- Serviços contratados
-- Tempo de permanência
-- Cobrança mensal
-- Histórico de churn
+- Demographic data
+- Contract type
+- Subscribed services
+- Tenure
+- Monthly charges
+- Churn history
 
 ### Target
 
 - `Churn Value`
-  - `0` = cliente permaneceu
-  - `1` = cliente saiu
+  - `0` = Customer stayed
+  - `1` = Customer churned
 
 ---
 
 ## ⚠️ Data Leakage Prevention
 
-As colunas abaixo foram removidas por conter informação futura:
+The following columns were removed because they contain future information:
 
 - `Churn Label`
 - `Churn Score`
@@ -71,109 +73,110 @@ As colunas abaixo foram removidas por conter informação futura:
 
 ## 📈 Performance
 
-### Modelo Final: Random Forest
+## Cross Validation Results
 
-| Metric | Value |
-|--------|------:|
-| Accuracy | 0.79 |
-| Precision | 0.62 |
-| Recall | 0.61 |
-| F1-score | 0.61 |
-| ROC-AUC | 0.83 |
+| Model | Accuracy Mean | Precision Mean | Recall Mean | F1 Mean | ROC-AUC Mean | ROC-AUC Std |
+|---|---:|---:|---:|---:|---:|---:|
+| Gradient Boosting | 0.8093 | 0.6805 | 0.5302 | 0.5960 | **0.8617** | 0.0071 |
+| Decision Tree | 0.7572 | 0.5279 | **0.8138** | **0.6400** | 0.8478 | 0.0086 |
+| Logistic Regression | 0.7693 | 0.5491 | 0.7309 | 0.6270 | 0.8392 | 0.0118 |
+| Random Forest | 0.7402 | 0.5066 | 0.8197 | 0.6261 | 0.8375 | 0.0083 |
+| MLPClassifier | 0.7126 | 0.4568 | 0.4360 | 0.4458 | 0.7081 | 0.0111 |
 
----
+## Final Model Selection
 
-## 🎚️ Threshold Ajustado
+After comparing all models using **5-fold stratified cross validation**, **Gradient Boosting** was selected as the final model.
 
-Threshold operacional utilizado: `0.4`
-
-Objetivo: aumentar recall de churn.
+It achieved the highest **ROC-AUC Mean (0.8617)** and the highest **Accuracy Mean (0.8093)**, demonstrating the best overall performance and stable results across folds.
 
 ---
 
-## 🧠 Alternative Model Results
+## 🎚️ Threshold Strategy
 
-| Model | ROC-AUC |
-|------|--------:|
-| Logistic Regression | 0.77 |
-| Decision Tree | 0.83 |
-| Random Forest | 0.82 |
-| PyTorch MLP | 0.77 |
+Operational threshold may be adjusted depending on business goals.
+
+Example:
+
+- Lower threshold → Higher recall
+- Higher threshold → Higher precision
+
+The default classification threshold is `0.50`.
 
 ---
 
-## ⚖️ Trade-offs
+## 🧠 Trade-offs
 
-Maior recall aumenta a capacidade de detectar churn, porém gera mais falsos positivos.
+Higher recall increases the ability to detect churners, but may generate more false positives.
 
-Isso pode aumentar o custo de campanhas, porém reduz o risco de perder clientes valiosos.
+This can increase campaign costs, but reduces the risk of losing valuable customers.
 
 ---
 
 ## ⚠️ Limitations
 
-- Dataset limitado a uma empresa de telecom
-- Pode não generalizar para outros mercados
-- Mudanças econômicas podem afetar performance futura
-- Dados históricos podem conter vieses operacionais
+- Dataset limited to one telecom company
+- May not generalize to other industries
+- Economic changes may impact future performance
+- Historical data may contain operational bias
 
 ---
 
 ## 🧬 Bias and Fairness Considerations
 
-Possíveis fontes de viés:
+Possible sources of bias:
 
-- Perfil demográfico da base original
-- Estratégias comerciais passadas
-- Distribuição desigual entre grupos
+- Original dataset demographic profile
+- Past business strategies
+- Uneven group distribution
 
-Recomenda-se monitoramento contínuo por segmento.
+Continuous monitoring by segment is recommended.
 
 ---
 
 ## 🚨 Risks
 
-- Falsos positivos: clientes tratados como churn sem necessidade
-- Falsos negativos: clientes churn não detectados
-- Drift temporal do comportamento dos clientes
+- False positives: customers identified as churn risk unnecessarily
+- False negatives: churners not detected
+- Temporal drift in customer behavior
 
 ---
 
 ## 🔁 Monitoring Plan
 
-Recomenda-se monitorar mensalmente:
+Recommended monthly monitoring:
 
 - Accuracy
 - Recall
 - Precision
-- Taxa de churn real
-- Drift de features
-- Distribuição das probabilidades
+- Real churn rate
+- Feature drift
+- Probability distribution
 
 ---
 
 ## 🛠️ Maintenance
 
-Recomendado retreinamento:
+Recommended retraining:
 
-- Mensal ou trimestral
-- Quando performance cair
-- Quando houver mudança relevante de negócio
+- Monthly or quarterly
+- When performance declines
+- When significant business changes occur
 
 ---
 
 ## 👩‍💻 Human Oversight
 
-O modelo deve apoiar decisões humanas e não substituí-las integralmente.
+The model should support human decisions and not fully replace them.
 
 ---
 
 ## 📌 Final Recommendation
 
-O modelo Random Forest apresentou melhor equilíbrio entre performance e interpretabilidade.
+Gradient Boosting presented the best overall predictive performance and stable validation results.
 
-É recomendado para uso assistido em estratégias de retenção.
+It is recommended for assisted use in customer retention strategies.
 
 ---
 
 ## 👩‍💻 Author
+

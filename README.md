@@ -59,28 +59,28 @@ The following columns were removed because they contain future information:
 
 ## 📁 Project Structure
 
-    telco-churn-prediction/
-    │
-    ├── data/
-    ├── docs/
-    │   └── model_card.md
-    ├── models/
-    ├── notebooks/
-    ├── src/
-    │   ├── api.py
-    │   ├── data.py
-    │   ├── evaluate.py
-    │   ├── train.py
-    │   ├── train_mlp.py
-    │   └── mlflow_tracking.py
-    ├── tests/
-    │   ├── test_api.py
-    │   ├── test_schema.py
-    │   └── test_smoke.py
-    ├── pyproject.toml
-    ├── Makefile
-    ├── README.md
-    └── .gitignore
+telco-churn-prediction/
+│
+├── data/
+├── docs/
+│   └── model_card.md
+├── models/
+├── notebooks/
+├── src/
+│   ├── api.py
+│   ├── data.py
+│   ├── evaluate.py
+│   ├── train.py
+│   ├── train_mlp.py
+│   └── mlflow_tracking.py
+├── tests/
+│   ├── test_api.py
+│   ├── test_schema.py
+│   └── test_smoke.py
+├── pyproject.toml
+├── Makefile
+├── README.md
+└── .gitignore
 
 ---
 
@@ -88,17 +88,17 @@ The following columns were removed because they contain future information:
 
 ### Clone repository
 
-    git clone https://github.com/SarahNovais25/telco-churn-prediction.git
-    cd telco-churn-prediction
+git clone https://github.com/SarahNovais25/telco-churn-prediction.git  
+cd telco-churn-prediction
 
 ### Create virtual environment
 
-    python3 -m venv .venv
-    source .venv/bin/activate
+python3 -m venv .venv  
+source .venv/bin/activate
 
 ### Install dependencies
 
-    make install
+make install
 
 ---
 
@@ -106,23 +106,23 @@ The following columns were removed because they contain future information:
 
 ### Install project dependencies
 
-    make install
+make install
 
 ### Run lint validation
 
-    make lint
+make lint
 
 ### Run automated tests
 
-    make test
+make test
 
-### Train Random Forest model
+### Train models
 
-    make train
+make train
 
 ### Run FastAPI application
 
-    make run
+make run
 
 ---
 
@@ -130,7 +130,7 @@ The following columns were removed because they contain future information:
 
 Run neural network experiment:
 
-    python3 -m src.train_mlp
+python3 -m src.train_mlp
 
 ---
 
@@ -138,60 +138,70 @@ Run neural network experiment:
 
 Run MLflow UI:
 
-    python3 -m mlflow ui
+python3 -m mlflow ui
 
 Open in browser:
 
-    http://127.0.0.1:5000
+http://127.0.0.1:5000
 
 ---
 
 ## 🤖 Models Evaluated
 
-### Baselines
+### Baseline Models
 
 - Dummy Classifier
 - Logistic Regression
 
-### Tree Models
+### Tree-Based Models
 
 - Decision Tree
 - Random Forest
+- Gradient Boosting
 
 ### Neural Network
 
 - PyTorch MLP
+- MLPClassifier
+
+---
+
+## 📈 Cross Validation Results
+
+| Model | Accuracy Mean | Precision Mean | Recall Mean | F1 Mean | ROC-AUC Mean | ROC-AUC Std |
+|---|---:|---:|---:|---:|---:|---:|
+| Gradient Boosting | 0.8093 | 0.6805 | 0.5302 | 0.5960 | **0.8617** | 0.0071 |
+| Decision Tree | 0.7572 | 0.5279 | **0.8138** | **0.6400** | 0.8478 | 0.0086 |
+| Logistic Regression | 0.7693 | 0.5491 | 0.7309 | 0.6270 | 0.8392 | 0.0118 |
+| Random Forest | 0.7402 | 0.5066 | 0.8197 | 0.6261 | 0.8375 | 0.0083 |
+| MLPClassifier | 0.7126 | 0.4568 | 0.4360 | 0.4458 | 0.7081 | 0.0111 |
 
 ---
 
 ## 🏆 Final Model
 
-### Random Forest Classifier
+### Gradient Boosting Classifier
 
-Chosen due to strong balance between:
+Selected after comparing multiple algorithms using **5-fold stratified cross validation**.
 
-- Predictive performance
-- Interpretability
-- Fast inference
-- Easy deployment
+Chosen due to:
+
+- Highest ROC-AUC score
+- Highest overall accuracy
+- Stable performance across folds
+- Strong generalization capability
 
 ---
 
-## 📈 Final Metrics
+## 📌 Final Model Metrics
 
 | Metric | Value |
-|--------|------:|
-| Accuracy | 0.79 |
-| Precision | 0.62 |
-| Recall | 0.61 |
-| F1-score | 0.61 |
-| ROC-AUC | 0.83 |
-
-### Threshold Used
-
-    0.4
-
-Optimized to improve churn recall.
+|---|---:|
+| Accuracy Mean | 0.8093 |
+| Precision Mean | 0.6805 |
+| Recall Mean | 0.5302 |
+| F1 Mean | 0.5960 |
+| ROC-AUC Mean | 0.8617 |
 
 ---
 
@@ -205,7 +215,7 @@ Implemented tests:
 
 Run:
 
-    make test
+make test
 
 ---
 
@@ -213,7 +223,7 @@ Run:
 
 Linting with Ruff:
 
-    make lint
+make lint
 
 ---
 
@@ -221,11 +231,11 @@ Linting with Ruff:
 
 Run API:
 
-    make run
+make run
 
 Swagger Docs:
 
-    http://127.0.0.1:8000/docs
+http://127.0.0.1:8000/docs
 
 ### Available Endpoints
 
@@ -241,9 +251,9 @@ Tracks:
 
 - Parameters
 - Metrics
-- Loss history
 - Model artifacts
 - Experiment comparisons
+- Training runs
 
 ---
 
@@ -251,7 +261,7 @@ Tracks:
 
 See detailed documentation:
 
-    docs/model_card.md
+docs/model_card.md
 
 Includes:
 
@@ -284,6 +294,7 @@ Monitor monthly:
 - CI/CD pipeline
 - Cloud deployment
 - Real-time inference
+- Threshold optimization
 
 ---
 
