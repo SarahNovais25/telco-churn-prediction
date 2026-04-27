@@ -82,7 +82,6 @@ The following columns were removed because they contain future information:
 | Logistic Regression | 0.7589 | 0.5298 | **0.8127** | 0.6414 | 0.8576 | 0.0089 |
 | Decision Tree | 0.7537 | 0.5233 | 0.8117 | 0.6361 | 0.8449 | 0.0088 |
 | MLPClassifier | 0.7583 | 0.5478 | 0.5131 | 0.5298 | 0.7937 | 0.0075 |
-|
 
 ## Final Model Selection
 
@@ -99,7 +98,8 @@ Operational threshold may be adjusted depending on business goals.
 Example:
 
 - Lower threshold → Higher recall
-- Higher threshold → Higher precision
+- Higher recall increases the ability to detect churners, but may generate more false positives.
+- Higher precision reduces the number of false positives, but may miss some actual churners.
 
 The default classification threshold is `0.50`.
 
@@ -134,11 +134,23 @@ Continuous monitoring by segment is recommended.
 
 ---
 
-## 🚨 Risks
+## 🚨 Riscos e Cenários de Falha
 
-- False positives: customers identified as churn risk unnecessarily
-- False negatives: churners not detected
-- Temporal drift in customer behavior
+Este modelo, como qualquer sistema preditivo, está sujeito a riscos e pode falhar em determinadas situações. É crucial entender esses cenários para uma utilização responsável e eficaz.
+
+### Riscos Inerentes
+
+*   **Falsos Positivos:** Clientes identificados como risco de churn que, na verdade, não iriam cancelar. Isso pode levar a custos desnecessários em campanhas de retenção ou a um contato inoportuno com o cliente.
+*   **Falsos Negativos:** Clientes que realmente iriam cancelar, mas que o modelo não conseguiu identificar como risco. Isso resulta na perda de clientes valiosos e oportunidades de intervenção.
+*   **Drift Temporal (Temporal Drift):** O comportamento do cliente e as condições de mercado podem mudar ao longo do tempo, fazendo com que as relações aprendidas pelo modelo se tornem desatualizadas e sua performance degrade.
+
+### Cenários de Falha Específicos
+
+*   **Mudanças Abruptas no Mercado:** Eventos externos não representados nos dados de treinamento (ex: entrada de um novo concorrente com ofertas agressivas, crises econômicas, novas regulamentações) podem alterar drasticamente o comportamento de churn, tornando as previsões do modelo menos precisas.
+*   **Comportamento de Cliente Atípico:** O modelo pode ter dificuldade em prever o churn para segmentos de clientes com histórico limitado ou comportamentos muito distintos da maioria (ex: clientes recém-adquiridos, clientes com serviços muito específicos).
+*   **Problemas na Qualidade dos Dados de Entrada:** Erros ou inconsistências nos dados fornecidos à API para inferência (ex: valores ausentes inesperados, formatos incorretos, dados desatualizados) podem levar a previsões errôneas ou à falha da API.
+*   **Alterações na Definição de Churn:** Se a operadora mudar a forma como define ou registra o churn, o modelo pode precisar de retreinamento e revalidação para se adaptar à nova definição.
+*   **Viés de Seleção:** Se as campanhas de retenção passadas influenciaram os dados de treinamento de forma não controlada, o modelo pode aprender a prever o churn apenas para clientes que não foram alvo dessas campanhas, falhando em identificar outros grupos de risco.
 
 ---
 
@@ -180,4 +192,3 @@ It is recommended for assisted use in customer retention strategies.
 ---
 
 ## 👩‍💻 Author
-
