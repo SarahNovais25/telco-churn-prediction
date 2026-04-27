@@ -1,6 +1,6 @@
 .venv/
 .venv
-venv/
+venv
 .env
 .vscode/
 __pycache__/
@@ -13,3 +13,6 @@ data/raw/.DS_Store
 mlruns/
 __pycache__/
 .venv/.DS_Store
+.pytest_cache
+.ruff_cache
+telco_churn_prediction.egg-info
