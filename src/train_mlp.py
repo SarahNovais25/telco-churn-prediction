@@ -1,6 +1,5 @@
 import logging
 from pathlib import Path
-
 import joblib
 import mlflow
 import numpy as np
@@ -11,15 +10,16 @@ from sklearn.model_selection import train_test_split
 from torch import nn
 from torch.utils.data import DataLoader, TensorDataset
 
-# IMPORTANTE: Importando do train.py para garantir paridade com o modelo sklearn de produção
 from src.train import load_data, build_preprocessor
+from src.mlflow_tracking import setup_mlflow, log_metrics, log_params
+
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 SEED = 42
 MODEL_PATH = Path("models/mlp_churn.pt")
-SCALER_PATH = Path("models/mlp_preprocessor.joblib") # Mudou de scaler para preprocessor
+SCALER_PATH = Path("models/mlp_preprocessor.joblib") 
 EXPERIMENT_NAME = "telco-churn-prediction"
 
 torch.manual_seed(SEED)
@@ -42,7 +42,7 @@ class ChurnMLP(nn.Module):
         return self.network(x)
 
 def train_mlp():
-    mlflow.set_experiment(EXPERIMENT_NAME)
+    setup_mlflow(EXPERIMENT_NAME)
     
     # Mantendo o tracking uri para salvar corretamente na pasta models/mlruns
     mlruns_path = MODEL_PATH.parent.resolve() / "mlruns"
@@ -88,8 +88,7 @@ def train_mlp():
         criterion = nn.BCEWithLogitsLoss()
         optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
         
-        mlflow.log_params(
-            {
+        params ={
                 "model_type": "PyTorch MLP",
                 "hidden_layers": "64,32",
                 "dropout": 0.2,
@@ -101,9 +100,8 @@ def train_mlp():
                 "val_size": 0.15,
                 "random_state": SEED,
                 "input_dim": input_dim,
-            }
-        )
-
+            } 
+        log_params(params)
         best_val_loss = float("inf")
         patience = 10
         patience_counter = 0
@@ -174,7 +172,7 @@ def train_mlp():
             "best_epoch": best_epoch
         }
         
-        mlflow.log_metrics(metrics)
+        log_metrics(metrics)
         mlflow.log_artifact(str(MODEL_PATH))
         mlflow.log_artifact(str(SCALER_PATH))
 
