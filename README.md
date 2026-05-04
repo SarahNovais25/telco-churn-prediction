@@ -108,8 +108,12 @@ cd telco-churn-prediction
 
 Create virtual environment:
 
-python3 -m venv .venv  
+python -m venv .venv  
+
+Linux/Max:
 source .venv/bin/activate
+Windows:
+.venv\Scripts\activate
 
 Install dependencies:
 
@@ -281,7 +285,7 @@ make mlflow
 
 Or:
 
-python3 -m mlflow ui
+python -m mlflow ui
 
 Open in browser:
 
