@@ -43,7 +43,7 @@ try:
     logger.info("Modelo carregado com sucesso.", extra={"extra_info": {"model_path": str(MODEL_PATH)}})
 except Exception as e:
     logger.error("Falha ao carregar o modelo.", exc_info=True, extra={"extra_info": {"model_path": str(MODEL_PATH)}})
-    raise e
+    raise HTTPException(status_code=500, detail="Erro interno na predição")
 
 THRESHOLD = 0.4
 
@@ -159,4 +159,4 @@ def predict(customer: CustomerData):
 
     except Exception as e:
         logger.error("Erro durante a predição", exc_info=True)
-        raise e
+        raise HTTPException(status_code=500, detail="Erro interno na predição")
