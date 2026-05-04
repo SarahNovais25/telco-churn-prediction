@@ -5,18 +5,9 @@
 ## 📌 Model Details
 
 - **Project Name:** Telco Customer Churn Prediction
-- **Author:** 
+- **Author:** Sarah Novais
 - **Model Type:** Gradient Boosting Classifier
 - **Primary Objective:** Predict customer churn probability.
-
-### Alternative Models Tested
-
-- Dummy Classifier
-- Logistic Regression
-- Decision Tree
-- Random Forest
-- MLPClassifier
-- PyTorch MLP Neural Network
 
 ---
 
@@ -51,6 +42,7 @@ Dataset used: **Telco Customer Churn Dataset**
 - Subscribed services
 - Tenure
 - Monthly charges
+- Payment method
 - Churn history
 
 ### Target
@@ -69,11 +61,45 @@ The following columns were removed because they contain future information:
 - `Churn Score`
 - `Churn Reason`
 
+The following identifier, geographic and non-operational columns were also removed to ensure that the model uses only features expected to be available during API inference:
+
+- `CustomerID`
+- `Count`
+- `Country`
+- `State`
+- `City`
+- `Zip Code`
+- `Lat Long`
+- `Latitude`
+- `Longitude`
+- `CLTV`
+
 ---
 
-## 📈 Performance
+## 🤖 Models Evaluated
 
-## Cross Validation Results
+The following models were evaluated:
+
+- Logistic Regression
+- Decision Tree
+- Random Forest
+- Gradient Boosting
+- MLPClassifier
+- PyTorch MLP Neural Network
+
+---
+
+## 📈 Evaluation Methodology
+
+Model evaluation was performed using **5-fold stratified cross validation**.
+
+This approach was used to reduce dependency on a single train/test split and to evaluate model stability across different data partitions.
+
+Experiments were tracked using **MLflow**, including parameters, metrics and artifacts.
+
+---
+
+## 📈 Cross Validation Results
 
 | Model | Accuracy Mean | Precision Mean | Recall Mean | F1 Mean | ROC-AUC Mean | ROC-AUC Std |
 |---|---:|---:|---:|---:|---:|---:|
@@ -83,42 +109,81 @@ The following columns were removed because they contain future information:
 | Decision Tree | 0.7537 | 0.5233 | 0.8117 | 0.6361 | 0.8449 | 0.0088 |
 | MLPClassifier | 0.7583 | 0.5478 | 0.5131 | 0.5298 | 0.7937 | 0.0075 |
 
-## Final Model Selection
+---
 
-After comparing all models using **5-fold stratified cross validation**, **Gradient Boosting** was selected as the final model.
+## 🏆 Final Model Selection
 
-It achieved the highest **ROC-AUC Mean (0.8617)** and the highest **Accuracy Mean (0.8093)**, demonstrating the best overall performance and stable results across folds.
+After comparing all models using stratified cross validation, **Gradient Boosting** was selected as the final model.
+
+It achieved the highest **ROC-AUC Mean (0.8628)** and the highest **Accuracy Mean (0.8099)**, demonstrating the best overall performance and stable results across folds.
+
+Although Logistic Regression and Random Forest achieved higher recall, Gradient Boosting was selected because it showed stronger global performance for ranking and separating churn risk.
 
 ---
 
 ## 🎚️ Threshold Strategy
 
-Operational threshold may be adjusted depending on business goals.
+The API uses an operational threshold of:
 
-Example:
+`0.4`
 
-- Lower threshold → Higher recall
-- Higher recall increases the ability to detect churners, but may generate more false positives.
-- Higher precision reduces the number of false positives, but may miss some actual churners.
+This threshold was selected to increase churn detection sensitivity.
 
-The default classification threshold is `0.50`.
+Threshold behavior:
+
+- Lower threshold → higher recall
+- Higher threshold → higher precision
+
+The threshold may be adjusted depending on business goals and campaign costs.
 
 ---
 
-## 🧠 Trade-offs
+## 📦 Model Artifact
 
-Higher recall increases the ability to detect churners, but may generate more false positives.
+The final trained model is saved as:
 
-This can increase campaign costs, but reduces the risk of losing valuable customers.
+`models/best_model.pkl`
+
+This artifact contains the complete machine learning pipeline, including preprocessing and the trained Gradient Boosting model.
+
+The FastAPI application loads this file to generate churn predictions without retraining the model.
+
+---
+
+## 🔬 MLflow Tracking
+
+MLflow is used to track:
+
+- Model parameters
+- Cross-validation metrics
+- ROC-AUC
+- PR-AUC
+- Model artifacts
+- Final selected model
+
+The MLflow UI can be started with:
+
+`python3 -m mlflow ui`
+
+---
+
+## ⚖️ Trade-offs
+
+Higher recall increases the ability to detect customers likely to churn, but may also generate more false positives.
+
+This can increase retention campaign costs, but may reduce the risk of losing valuable customers.
+
+Gradient Boosting showed the best global performance, while Logistic Regression and Random Forest showed stronger recall.
 
 ---
 
 ## ⚠️ Limitations
 
-- Dataset limited to one telecom company
-- May not generalize to other industries
-- Economic changes may impact future performance
-- Historical data may contain operational bias
+- Dataset is limited to a telecom context
+- Model may not generalize to other industries without revalidation
+- Historical data may contain operational or commercial bias
+- Customer behavior may change over time
+- Model should be monitored after deployment
 
 ---
 
@@ -126,31 +191,20 @@ This can increase campaign costs, but reduces the risk of losing valuable custom
 
 Possible sources of bias:
 
-- Original dataset demographic profile
-- Past business strategies
-- Uneven group distribution
+- Demographic distribution in the original dataset
+- Historical business strategies
+- Uneven representation of customer groups
 
-Continuous monitoring by segment is recommended.
+Continuous monitoring by customer segment is recommended.
 
 ---
 
-## 🚨 Riscos e Cenários de Falha
+## 🚨 Risks
 
-Este modelo, como qualquer sistema preditivo, está sujeito a riscos e pode falhar em determinadas situações. É crucial entender esses cenários para uma utilização responsável e eficaz.
-
-### Riscos Inerentes
-
-*   **Falsos Positivos:** Clientes identificados como risco de churn que, na verdade, não iriam cancelar. Isso pode levar a custos desnecessários em campanhas de retenção ou a um contato inoportuno com o cliente.
-*   **Falsos Negativos:** Clientes que realmente iriam cancelar, mas que o modelo não conseguiu identificar como risco. Isso resulta na perda de clientes valiosos e oportunidades de intervenção.
-*   **Drift Temporal (Temporal Drift):** O comportamento do cliente e as condições de mercado podem mudar ao longo do tempo, fazendo com que as relações aprendidas pelo modelo se tornem desatualizadas e sua performance degrade.
-
-### Cenários de Falha Específicos
-
-*   **Mudanças Abruptas no Mercado:** Eventos externos não representados nos dados de treinamento (ex: entrada de um novo concorrente com ofertas agressivas, crises econômicas, novas regulamentações) podem alterar drasticamente o comportamento de churn, tornando as previsões do modelo menos precisas.
-*   **Comportamento de Cliente Atípico:** O modelo pode ter dificuldade em prever o churn para segmentos de clientes com histórico limitado ou comportamentos muito distintos da maioria (ex: clientes recém-adquiridos, clientes com serviços muito específicos).
-*   **Problemas na Qualidade dos Dados de Entrada:** Erros ou inconsistências nos dados fornecidos à API para inferência (ex: valores ausentes inesperados, formatos incorretos, dados desatualizados) podem levar a previsões errôneas ou à falha da API.
-*   **Alterações na Definição de Churn:** Se a operadora mudar a forma como define ou registra o churn, o modelo pode precisar de retreinamento e revalidação para se adaptar à nova definição.
-*   **Viés de Seleção:** Se as campanhas de retenção passadas influenciaram os dados de treinamento de forma não controlada, o modelo pode aprender a prever o churn apenas para clientes que não foram alvo dessas campanhas, falhando em identificar outros grupos de risco.
+- False positives: customers may be classified as churn risk unnecessarily
+- False negatives: customers likely to churn may not be detected
+- Data drift may reduce model performance over time
+- Business changes may affect prediction quality
 
 ---
 
@@ -161,9 +215,13 @@ Recommended monthly monitoring:
 - Accuracy
 - Recall
 - Precision
+- ROC-AUC
+- PR-AUC
 - Real churn rate
 - Feature drift
-- Probability distribution
+- Prediction distribution
+- API latency
+- API errors
 
 ---
 
@@ -172,23 +230,24 @@ Recommended monthly monitoring:
 Recommended retraining:
 
 - Monthly or quarterly
-- When performance declines
+- When model performance decreases
 - When significant business changes occur
+- When data distribution changes
 
 ---
 
 ## 👩‍💻 Human Oversight
 
-The model should support human decisions and not fully replace them.
+The model should support human decision-making and should not fully replace business or customer relationship teams.
+
+Predictions should be used as decision support, especially for prioritizing retention actions.
 
 ---
 
 ## 📌 Final Recommendation
 
-Gradient Boosting presented the best overall predictive performance and stable validation results.
+Gradient Boosting presented the best overall predictive performance and stable cross-validation results.
 
 It is recommended for assisted use in customer retention strategies.
 
 ---
-
-## 👩‍💻 Author

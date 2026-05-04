@@ -1,18 +1,15 @@
+# MLflow local tracking
+mlruns/
+
+# Python cache
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+
+# Virtual environments
 .venv/
-.venv
-venv
-.env
-.vscode/
-__pycache__/
-*.pyc
+venv/
+
+# OS files
 .DS_Store
-mlruns/
-data/raw/.DS_Store
-.DS_Store
-*.egg-info/
-mlruns/
-__pycache__/
-.venv/.DS_Store
-.pytest_cache
-.ruff_cache
-telco_churn_prediction.egg-info

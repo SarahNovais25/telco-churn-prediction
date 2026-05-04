@@ -55,6 +55,19 @@ The following columns were removed because they contain future information:
 - `Churn Score`
 - `Churn Reason`
 
+The following identifier, geographic and non-operational columns were also removed to keep the model aligned with API inference:
+
+- `CustomerID`
+- `Count`
+- `Country`
+- `State`
+- `City`
+- `Zip Code`
+- `Lat Long`
+- `Latitude`
+- `Longitude`
+- `CLTV`
+
 ---
 
 ## 📁 Project Structure
@@ -64,9 +77,9 @@ telco-churn-prediction/
 ├── data/
 ├── docs/
 │   └── model_card.md
-│   └── deploy_architecture.md  # Documentação da arquitetura de deploy (batch vs. real-time)
-│   └── monitoring_plan.md      # Plano de monitoramento do modelo em produção
 ├── models/
+│   ├── best_model.pkl
+│   └── model_comparison_cv.csv
 ├── notebooks/
 ├── src/
 │   ├── api.py
@@ -88,17 +101,17 @@ telco-churn-prediction/
 
 ## ⚙️ Setup
 
-### Clone repository
+Clone repository:
 
 git clone https://github.com/SarahNovais25/telco-churn-prediction.git  
 cd telco-churn-prediction
 
-### Create virtual environment
+Create virtual environment:
 
 python3 -m venv .venv  
 source .venv/bin/activate
 
-### Install dependencies
+Install dependencies:
 
 make install
 
@@ -106,45 +119,29 @@ make install
 
 ## 🚀 Available Commands
 
-### Install project dependencies
+Install project dependencies:
 
 make install
 
-### Run lint validation
+Run lint validation:
 
 make lint
 
-### Run automated tests
+Run automated tests:
 
 make test
 
-### Train models
+Train and compare models:
 
 make train
 
-### Run FastAPI application
+Run FastAPI application:
 
 make run
 
----
-
-## 🧠 Neural Network Training (PyTorch MLP)
-
-Run neural network experiment:
-
-python3 -m src.train_mlp
-
----
-
-## 🔬 MLflow Experiment Tracking
-
 Run MLflow UI:
 
-python3 -m mlflow ui
-
-Open in browser:
-
-http://127.0.0.1:5000
+make mlflow
 
 ---
 
@@ -170,6 +167,8 @@ http://127.0.0.1:5000
 
 ## 📈 Cross Validation Results
 
+The models were evaluated using **5-fold stratified cross validation**.
+
 | Model | Accuracy Mean | Precision Mean | Recall Mean | F1 Mean | ROC-AUC Mean | ROC-AUC Std |
 |---|---:|---:|---:|---:|---:|---:|
 | Gradient Boosting | 0.8099 | 0.6697 | 0.5602 | 0.6100 | **0.8628** | 0.0056 |
@@ -178,35 +177,115 @@ http://127.0.0.1:5000
 | Decision Tree | 0.7537 | 0.5233 | 0.8117 | 0.6361 | 0.8449 | 0.0088 |
 | MLPClassifier | 0.7583 | 0.5478 | 0.5131 | 0.5298 | 0.7937 | 0.0075 |
 
-**Nota:** A validação dos modelos foi realizada utilizando **Cross Validation estratificada (5-fold)**. Esta técnica divide a base de dados várias vezes e testa repetidamente, garantindo que o modelo funcione de forma confiável e que os resultados sejam consistentes e robustos.
-
 ---
 
 ## 🏆 Final Model
 
 ### Gradient Boosting Classifier
 
-Selected after comparing multiple algorithms using **5-fold stratified cross validation**.
+The final model selected was **Gradient Boosting Classifier**.
 
-Chosen due to:
+It was selected because it achieved the highest **ROC-AUC Mean (0.8628)** and the highest **Accuracy Mean (0.8099)** during cross validation.
 
-- Highest ROC-AUC score
-- Highest overall accuracy
-- Stable performance across folds
-- Strong generalization capability
-- **Funcionamento:** O Gradient Boosting opera como uma sequência de pequenas árvores de decisão. Cada nova árvore é construída para corrigir os erros das árvores anteriores, resultando em um modelo final muito robusto e eficaz na previsão de padrões complexos.
+Although Logistic Regression and Random Forest achieved higher recall, Gradient Boosting showed the best overall performance and stable results across folds.
 
 ---
 
-## 📌 Final Model Metrics
+## 📦 Model Artifact
 
-| Metric | Value |
-|---|---:|
-| Accuracy Mean | 0.8093 |
-| Precision Mean | 0.6805 |
-| Recall Mean | 0.5302 |
-| F1 Mean | 0.5960 |
-| ROC-AUC Mean | 0.8617 |
+After training, the final model is saved as:
+
+models/best_model.pkl
+
+This file contains the trained pipeline, including preprocessing and the final model.
+
+The API loads this file to make predictions without retraining the model every time.
+
+Simple flow:
+
+Historical data → train.py → best_model.pkl → FastAPI → churn prediction
+
+---
+
+## 🌐 API Inference
+
+Run API:
+
+make run
+
+Swagger Docs:
+
+http://127.0.0.1:8000/docs
+
+### Available Endpoints
+
+- `GET /`
+- `GET /health`
+- `POST /predict`
+
+Example request:
+
+```json
+{
+  "gender": "Male",
+  "senior_citizen": "0",
+  "partner": "Yes",
+  "dependents": "No",
+  "tenure_months": 12,
+  "phone_service": "Yes",
+  "multiple_lines": "No",
+  "internet_service": "Fiber optic",
+  "online_security": "No",
+  "online_backup": "Yes",
+  "device_protection": "No",
+  "tech_support": "No",
+  "streaming_tv": "Yes",
+  "streaming_movies": "Yes",
+  "contract": "Month-to-month",
+  "paperless_billing": "Yes",
+  "payment_method": "Electronic check",
+  "monthly_charges": 89.5,
+  "total_charges": 1050.0
+}
+```
+
+Example response:
+
+```json
+{
+  "churn_probability": 0.7596,
+  "prediction": 1,
+  "threshold": 0.4
+}
+```
+
+---
+
+## 🔬 MLflow Experiment Tracking
+
+This project uses MLflow to track machine learning experiments.
+
+MLflow records:
+
+- Model name
+- Model parameters
+- Cross-validation metrics
+- ROC-AUC
+- PR-AUC
+- Model artifacts
+- Final selected model
+
+Run MLflow UI:
+
+make mlflow
+
+Or:
+
+python3 -m mlflow ui
+
+Open in browser:
+
+http://127.0.0.1:5000
 
 ---
 
@@ -232,39 +311,6 @@ make lint
 
 ---
 
-## 🌐 API Inference
-
-Run API:
-
-make run
-
-Swagger Docs:
-
-http://127.0.0.1:8000/docs
-
-### Available Endpoints
-
-- `GET /`
-- `GET /health`
-- `POST /predict`
-
-**Fluxo de Inferência:**
-Quando a API é iniciada, ela carrega o modelo treinado (`models/best_model.pkl`) na memória. Isso permite que a API receba dados de novos clientes através do endpoint `/predict` e retorne previsões de churn em tempo real, sem a necessidade de retreinamento a cada requisição.
-
----
-
-## 🔬 MLflow Tracking
-
-Tracks:
-
-- Parameters
-- Metrics
-- Model artifacts
-- Experiment comparisons
-- Training runs
-
----
-
 ## 📄 Model Governance
 
 See detailed documentation:
@@ -278,6 +324,7 @@ Includes:
 - Bias considerations
 - Monitoring plan
 - Limitations
+- Human oversight
 
 ---
 
@@ -288,11 +335,13 @@ Monitor monthly:
 - Accuracy
 - Recall
 - Precision
+- ROC-AUC
+- PR-AUC
 - Feature drift
 - Prediction distribution
 - Business churn rate
-
-Para um plano de monitoramento detalhado, incluindo métricas de performance, qualidade de dados, métricas de negócio, frequência, alertas e um playbook de resposta, consulte: [`docs/monitoring_plan.md`](./docs/monitoring_plan.md).
+- API latency
+- API errors
 
 ---
 
@@ -305,26 +354,8 @@ Para um plano de monitoramento detalhado, incluindo métricas de performance, qu
 - Cloud deployment
 - Real-time inference
 - Threshold optimization
-
----
-
-## ✨ Boas Práticas Implementadas
-
-Este projeto incorpora diversas boas práticas de MLOps e Engenharia de Software, conforme os requisitos do Tech Challenge:
-
-*   **Reprodutibilidade:** Seeds fixadas para garantir que os resultados do treinamento sejam consistentes.
-*   **MLflow Tracking:** Todos os experimentos são rastreados para facilitar a comparação, auditoria e versionamento de modelos e dados.
-*   **Código Modular:** Organização em módulos (`src/`) para facilitar a manutenção, testabilidade e reutilização do código.
-*   **Testes Abrangentes:** Cobertura de testes unitários, de schema (com `pandera`) e de API (smoke tests) para garantir a qualidade e robustez.
-*   **Logging Estruturado:** Implementação de logging estruturado na API para facilitar a depuração e o monitoramento em produção.
-*   **Linting com Ruff:** Garantia de um código limpo, padronizado e sem erros de estilo.
-*   **`pyproject.toml`:** Gerenciamento centralizado de dependências e configurações do projeto.
-*   **`Makefile`:** Automação de tarefas comuns do projeto (instalação, linting, testes, treinamento, execução da API).
-*   **Validação Cruzada Estratificada:** Utilizada para uma avaliação robusta e imparcial da performance do modelo.
-*   **Model Card:** Documentação detalhada do modelo, suas características, limitações e vieses.
-
----
-
-## 👩‍💻 Author
+- Structured logging
+- Latency middleware
+- Production monitoring
 
 ---

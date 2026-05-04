@@ -1,4 +1,8 @@
+from pathlib import Path
+
 import joblib
+import mlflow
+import mlflow.sklearn
 import numpy as np
 import pandas as pd
 from sklearn.compose import ColumnTransformer
@@ -11,22 +15,23 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 from sklearn.tree import DecisionTreeClassifier
 
+
 DATA_PATH = "data/Telco_customer_churn.xlsx"
 TARGET = "Churn Value"
+EXPERIMENT_NAME = "telco-churn-prediction"
 
 
 def load_data():
+    """Load dataset, remove leakage and non-production columns, and split X/y."""
     df = pd.read_excel(DATA_PATH)
 
-    # remove data leakage
     leakage_cols = [
         "Churn Label",
         "Churn Score",
         "Churn Reason",
     ]
 
-    # remove columns not useful for production API
-    drop_cols = [
+    non_production_cols = [
         "CustomerID",
         "Count",
         "Country",
@@ -39,11 +44,12 @@ def load_data():
         "CLTV",
     ]
 
-    remove_cols = leakage_cols + drop_cols
+    cols_to_remove = leakage_cols + non_production_cols
 
-    df = df.drop(columns=[c for c in remove_cols if c in df.columns])
+    df = df.drop(columns=[col for col in cols_to_remove if col in df.columns])
 
-    df = df.replace(r"^\s*$", np.nan, regex=True).infer_objects(copy=False)
+    pd.set_option("future.no_silent_downcasting", True)
+    df = df.replace(r"^\s*$", np.nan, regex=True)
 
     X = df.drop(columns=[TARGET])
     y = df[TARGET]
@@ -52,9 +58,14 @@ def load_data():
 
 
 def build_preprocessor(X):
-    numeric_features = X.select_dtypes(include=["int64", "float64"]).columns.tolist()
+    """Create preprocessing pipeline for numeric and categorical features."""
+    numeric_features = X.select_dtypes(
+        include=["int64", "float64"]
+    ).columns.tolist()
 
-    categorical_features = X.select_dtypes(include=["object", "category", "bool"]).columns.tolist()
+    categorical_features = X.select_dtypes(
+        include=["object", "category", "bool"]
+    ).columns.tolist()
 
     numeric_pipeline = Pipeline(
         steps=[
@@ -81,6 +92,7 @@ def build_preprocessor(X):
 
 
 def get_models():
+    """Return all models used in the comparison."""
     return {
         "logistic_regression": LogisticRegression(
             max_iter=1000,
@@ -113,6 +125,9 @@ def get_models():
 
 
 def run_cross_validation(X, y):
+    """Run cross validation for all models and log results in MLflow."""
+    mlflow.set_experiment(EXPERIMENT_NAME)
+
     preprocessor = build_preprocessor(X)
     models = get_models()
 
@@ -128,6 +143,7 @@ def run_cross_validation(X, y):
         "recall": "recall",
         "f1": "f1",
         "roc_auc": "roc_auc",
+        "pr_auc": "average_precision",
     }
 
     results = []
@@ -142,35 +158,53 @@ def run_cross_validation(X, y):
             ]
         )
 
-        scores = cross_validate(
-            pipeline,
-            X,
-            y,
-            cv=cv,
-            scoring=scoring,
-            return_train_score=False,
-            n_jobs=-1,
-        )
+        with mlflow.start_run(run_name=f"cv_{model_name}"):
+            scores = cross_validate(
+                pipeline,
+                X,
+                y,
+                cv=cv,
+                scoring=scoring,
+                return_train_score=False,
+                n_jobs=-1,
+            )
 
-        results.append(
-            {
-                "model": model_name,
+            metrics = {
                 "accuracy_mean": scores["test_accuracy"].mean(),
                 "precision_mean": scores["test_precision"].mean(),
                 "recall_mean": scores["test_recall"].mean(),
                 "f1_mean": scores["test_f1"].mean(),
                 "roc_auc_mean": scores["test_roc_auc"].mean(),
                 "roc_auc_std": scores["test_roc_auc"].std(),
+                "pr_auc_mean": scores["test_pr_auc"].mean(),
+                "pr_auc_std": scores["test_pr_auc"].std(),
             }
-        )
+
+            mlflow.log_param("model_name", model_name)
+            mlflow.log_params(model.get_params())
+            mlflow.log_metrics(metrics)
+
+            results.append(
+                {
+                    "model": model_name,
+                    **metrics,
+                }
+            )
 
     results_df = pd.DataFrame(results)
-    results_df = results_df.sort_values(by="roc_auc_mean", ascending=False)
+
+    results_df = results_df.sort_values(
+        by="roc_auc_mean",
+        ascending=False,
+    )
 
     return results_df
 
 
 def train_best_model(X, y, best_model_name):
+    """Train the best model on the full dataset and save it as a pipeline."""
+    mlflow.set_experiment(EXPERIMENT_NAME)
+
     models = get_models()
     preprocessor = build_preprocessor(X)
 
@@ -185,13 +219,22 @@ def train_best_model(X, y, best_model_name):
 
     pipeline.fit(X, y)
 
-    joblib.dump(pipeline, "models/best_model.pkl")
+    Path("models").mkdir(parents=True, exist_ok=True)
+
+    model_path = "models/best_model.pkl"
+    joblib.dump(pipeline, model_path)
+
+    with mlflow.start_run(run_name=f"final_model_{best_model_name}"):
+        mlflow.log_param("final_model", best_model_name)
+        mlflow.log_artifact(model_path)
+        mlflow.sklearn.log_model(pipeline, "model")
 
     print(f"\nBest model trained on full dataset: {best_model_name}")
     print("Saved at: models/best_model.pkl")
 
 
 def main():
+    """Run model comparison, save results, and train final model."""
     X, y = load_data()
 
     results_df = run_cross_validation(X, y)
@@ -199,7 +242,27 @@ def main():
     print("\nCross Validation Results:")
     print(results_df)
 
-    results_df.to_csv("models/model_comparison_cv.csv", index=False)
+    Path("models").mkdir(parents=True, exist_ok=True)
+
+    comparison_path = "models/model_comparison_cv.csv"
+    results_df.to_csv(comparison_path, index=False)
+
+    mlflow.set_experiment(EXPERIMENT_NAME)
+
+    with mlflow.start_run(run_name="model_comparison_summary"):
+        mlflow.log_artifact(comparison_path)
+
+        best_model_name = results_df.iloc[0]["model"]
+
+        mlflow.log_param("selected_model", best_model_name)
+        mlflow.log_metric(
+            "best_roc_auc_mean",
+            results_df.iloc[0]["roc_auc_mean"],
+        )
+        mlflow.log_metric(
+            "best_pr_auc_mean",
+            results_df.iloc[0]["pr_auc_mean"],
+        )
 
     best_model_name = results_df.iloc[0]["model"]
 
