@@ -5,7 +5,7 @@ from pathlib import Path
 
 import joblib
 import pandas as pd
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, HTTPException
 from pydantic import BaseModel
 
 # --- 1. Configuração de Logging Estruturado ---
