@@ -1,20 +1,20 @@
 install:
-	python3 -m pip install -e .
+	python -m pip install -e .
 
 lint:
-	python3 -m ruff check .
+	python -m ruff check .
 
 format:
-	python3 -m ruff format .
+	python -m ruff format .
 
 test:
-	python3 -m pytest
+	python -m pytest
 
 train:
-	python3 src/train.py
+	python src/train.py
 
 run:
-	python3 -m uvicorn src.api:app --reload
+	python -m uvicorn src.api:app --reload
 
 mlflow:
-	python3 -m mlflow ui
+	python -m mlflow ui
