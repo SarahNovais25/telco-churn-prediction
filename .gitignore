@@ -1,0 +1,15 @@
+# MLflow local tracking
+mlruns/
+
+# Python cache
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+
+# Virtual environments
+.venv/
+venv/
+
+# OS files
+.DS_Store
