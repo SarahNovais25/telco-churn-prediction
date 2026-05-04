@@ -110,9 +110,10 @@ Create virtual environment:
 
 python -m venv .venv  
 
-Linux/Max:
+Linux/Mac: 
 source .venv/bin/activate
-Windows:
+
+Windows: 
 .venv\Scripts\activate
 
 Install dependencies:
