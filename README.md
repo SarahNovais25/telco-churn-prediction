@@ -71,7 +71,7 @@ The following identifier, geographic and non-operational columns were also remov
 ---
 
 ## 📁 Project Structure
-
+```
 telco-churn-prediction/
 │
 ├── data/
@@ -102,7 +102,7 @@ telco-churn-prediction/
 ├── Makefile
 ├── README.md
 └── .gitignore
-
+```
 ---
 
 ## ⚙️ Setup
