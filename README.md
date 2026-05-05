@@ -75,23 +75,29 @@ The following identifier, geographic and non-operational columns were also remov
 telco-churn-prediction/
 │
 ├── data/
+│
 ├── docs/
-│   └── model_card.md
+│ └── model_card.md
+│
 ├── models/
-│   ├── best_model.pkl
-│   └── model_comparison_cv.csv
+│ ├── best_model.pkl
+│ └── model_comparison_cv.csv
+│
 ├── notebooks/
+│
 ├── src/
-│   ├── api.py
-│   ├── data.py
-│   ├── evaluate.py
-│   ├── train.py
-│   ├── train_mlp.py
-│   └── mlflow_tracking.py
+│ ├── api.py
+│ ├── data.py
+│ ├── evaluate.py
+│ ├── train.py
+│ ├── train_mlp.py
+│ └── mlflow_tracking.py
+│
 ├── tests/
-│   ├── test_api.py
-│   ├── test_schema.py
-│   └── test_smoke.py
+│ ├── test_api.py
+│ ├── test_schema.py
+│ └── test_smoke.py
+│
 ├── pyproject.toml
 ├── Makefile
 ├── README.md
