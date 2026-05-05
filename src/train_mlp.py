@@ -1,18 +1,17 @@
 import logging
 from pathlib import Path
+
 import joblib
 import mlflow
 import numpy as np
-import pandas as pd
 import torch
 from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score, roc_auc_score
 from sklearn.model_selection import train_test_split
 from torch import nn
 from torch.utils.data import DataLoader, TensorDataset
 
-from src.train import load_data, build_preprocessor
-from src.mlflow_tracking import setup_mlflow, log_metrics, log_params
-
+from src.mlflow_tracking import log_metrics, log_params, setup_mlflow
+from src.train import build_preprocessor, load_data
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -78,7 +77,11 @@ def train_mlp():
         
         X_test_tensor = torch.tensor(X_test_processed, dtype=torch.float32)
 
-        train_loader = DataLoader(TensorDataset(X_train_tensor, y_train_tensor), batch_size=64, shuffle=True)
+        train_loader = DataLoader(
+            TensorDataset(X_train_tensor, y_train_tensor), 
+            batch_size=64, 
+            shuffle=True
+            )
         val_loader = DataLoader(TensorDataset(X_val_tensor, y_val_tensor), batch_size=64)
 
         # O input_dim agora reflete a saída exata do OneHotEncoder do sklearn
@@ -129,7 +132,10 @@ def train_mlp():
             
             avg_val_loss = val_loss / len(val_loader)
             
-            mlflow.log_metrics({"train_loss": avg_train_loss, "val_loss": avg_val_loss}, step=epoch+1)
+            mlflow.log_metrics(
+                {"train_loss": avg_train_loss, "val_loss": avg_val_loss}, 
+                step=epoch+1
+                )
 
             # Early Stopping
             if avg_val_loss < best_val_loss:

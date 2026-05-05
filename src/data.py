@@ -1,8 +1,10 @@
 import pandas as pd
 
+
 def load_data(path: str):
     df = pd.read_excel(path)
     return df
+
 
 def preprocess_data(df: pd.DataFrame):
     # 1. Conversão de Colunas Numéricas

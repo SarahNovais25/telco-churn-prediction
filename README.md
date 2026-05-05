@@ -169,13 +169,13 @@ make mlflow
 
 The models were evaluated using **5-fold stratified cross validation**.
 
-| Model | Accuracy Mean | Precision Mean | Recall Mean | F1 Mean | ROC-AUC Mean | ROC-AUC Std |
+| Model | Accuracy Mean | Precision Mean | Recall Mean | F1 Mean | ROC-AUC Mean | ROC-AUC Std | PR-AUC Mean | PR-AUC Std
 |---|---:|---:|---:|---:|---:|---:|
-| Gradient Boosting | 0.8099 | 0.6697 | 0.5602 | 0.6100 | **0.8628** | 0.0056 |
-| Random Forest | 0.7821 | 0.5694 | 0.7346 | **0.6415** | 0.8587 | 0.0052 |
-| Logistic Regression | 0.7589 | 0.5298 | **0.8127** | 0.6414 | 0.8576 | 0.0089 |
-| Decision Tree | 0.7537 | 0.5233 | 0.8117 | 0.6361 | 0.8449 | 0.0088 |
-| MLPClassifier | 0.7583 | 0.5478 | 0.5131 | 0.5298 | 0.7937 | 0.0075 |
+| Gradient Boosting | 0.8099 | 0.6697 | 0.5602 | 0.6100 | **0.8628** | 0.0056 | 0.6869 | 0.0116 |
+| Random Forest | 0.7838 | 0.5717 | 0.7394 | **0.6448** | 0.8588 | 0.0053 | 0.6788 | 0.0103 |
+| Logistic Regression | 0.7589 | 0.5298 | **0.8127** | 0.6414 | 0.8576 | 0.0089 | 0.6733 | 0.0089 |
+| Decision Tree | 0.7537 | 0.5233 | 0.8117 | 0.6361 | 0.8449 | 0.0088 | 0.6194 | 0.0092 |
+| MLPClassifier | 0.7583 | 0.5478 | 0.5131 | 0.5298 | 0.7937 | 0.0075 | 0.5332 | 0.0206 |
 
 ---
 
@@ -253,7 +253,7 @@ Example response:
 
 ```json
 {
-  "churn_probability": 0.7596,
+  "churn_probability": 0.7577,
   "prediction": 1,
   "threshold": 0.4
 }

@@ -5,8 +5,9 @@ from pathlib import Path
 
 import joblib
 import pandas as pd
-from fastapi import FastAPI, Request, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from pydantic import BaseModel
+
 
 # --- 1. Configuração de Logging Estruturado ---
 class JSONLogFormatter(logging.Formatter):
@@ -40,9 +41,16 @@ app = FastAPI(title="Telco Churn Prediction API")
 MODEL_PATH = Path("models/best_model.pkl")
 try:
     model = joblib.load(MODEL_PATH)
-    logger.info("Modelo carregado com sucesso.", extra={"extra_info": {"model_path": str(MODEL_PATH)}})
-except Exception as e:
-    logger.error("Falha ao carregar o modelo.", exc_info=True, extra={"extra_info": {"model_path": str(MODEL_PATH)}})
+    logger.info(
+        "Modelo carregado com sucesso.", 
+        extra={"extra_info": {"model_path": str(MODEL_PATH)}}
+    )
+except Exception:
+    logger.error(
+        "Falha ao carregar o modelo.", 
+        exc_info=True, 
+        extra={"extra_info": {"model_path": str(MODEL_PATH)}}
+    )
     raise HTTPException(status_code=500, detail="Erro interno na predição")
 
 THRESHOLD = 0.4
@@ -155,8 +163,12 @@ def predict(customer: CustomerData):
             }
         )
 
-        return {"churn_probability": round(float(prob), 4), "prediction": pred, "threshold": THRESHOLD}
+        return {
+            "churn_probability": round(float(prob), 4), 
+            "prediction": pred, 
+            "threshold": THRESHOLD
+        }
 
-    except Exception as e:
+    except Exception:
         logger.error("Erro durante a predição", exc_info=True)
         raise HTTPException(status_code=500, detail="Erro interno na predição")

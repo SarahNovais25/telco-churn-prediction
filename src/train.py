@@ -1,8 +1,6 @@
 from pathlib import Path
 
 import joblib
-import mlflow
-import mlflow.sklearn
 import numpy as np
 import pandas as pd
 from sklearn.compose import ColumnTransformer
@@ -15,6 +13,10 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 from sklearn.tree import DecisionTreeClassifier
 
+from src.mlflow_tracking import (
+    log_artifacts, log_metrics, log_params, start_run,
+    log_sklearn_model, set_tracking_uri, setup_mlflow,
+)
 
 DATA_PATH = "data/Telco_customer_churn.xlsx"
 TARGET = "Churn Value"
@@ -126,7 +128,7 @@ def get_models():
 
 def run_cross_validation(X, y):
     """Run cross validation for all models and log results in MLflow."""
-    mlflow.set_experiment(EXPERIMENT_NAME)
+    setup_mlflow(EXPERIMENT_NAME)
 
     preprocessor = build_preprocessor(X)
     models = get_models()
@@ -158,7 +160,7 @@ def run_cross_validation(X, y):
             ]
         )
 
-        with mlflow.start_run(run_name=f"cv_{model_name}"):
+        with start_run(run_name=f"cv_{model_name}"):
             scores = cross_validate(
                 pipeline,
                 X,
@@ -180,9 +182,9 @@ def run_cross_validation(X, y):
                 "pr_auc_std": scores["test_pr_auc"].std(),
             }
 
-            mlflow.log_param("model_name", model_name)
-            mlflow.log_params(model.get_params())
-            mlflow.log_metrics(metrics)
+            log_params({"model_name": model_name})
+            log_params(model.get_params())
+            log_metrics(metrics)
 
             results.append(
                 {
@@ -203,7 +205,7 @@ def run_cross_validation(X, y):
 
 def train_best_model(X, y, best_model_name):
     """Train the best model on the full dataset and save it as a pipeline."""
-    mlflow.set_experiment(EXPERIMENT_NAME)
+    setup_mlflow(EXPERIMENT_NAME)
 
     models = get_models()
     preprocessor = build_preprocessor(X)
@@ -224,10 +226,10 @@ def train_best_model(X, y, best_model_name):
     model_path = "models/best_model.pkl"
     joblib.dump(pipeline, model_path)
 
-    with mlflow.start_run(run_name=f"final_model_{best_model_name}"):
-        mlflow.log_param("final_model", best_model_name)
-        mlflow.log_artifact(model_path)
-        mlflow.sklearn.log_model(pipeline, "model")
+    with start_run(run_name=f"final_model_{best_model_name}"):
+        log_params({"final_model": best_model_name})
+        log_artifacts(model_path)
+        log_sklearn_model(pipeline, "model")
 
     print(f"\nBest model trained on full dataset: {best_model_name}")
     print("Saved at: models/best_model.pkl")
@@ -247,22 +249,21 @@ def main():
     comparison_path = "models/model_comparison_cv.csv"
     results_df.to_csv(comparison_path, index=False)
 
-    mlflow.set_experiment(EXPERIMENT_NAME)
+    mlruns_path = Path("mlruns").resolve()
+    set_tracking_uri(f"file:///{mlruns_path.as_posix()}")
 
-    with mlflow.start_run(run_name="model_comparison_summary"):
-        mlflow.log_artifact(comparison_path)
+    setup_mlflow(EXPERIMENT_NAME)
+
+    with start_run(run_name="model_comparison_summary"):
+        log_artifacts(comparison_path)
 
         best_model_name = results_df.iloc[0]["model"]
 
-        mlflow.log_param("selected_model", best_model_name)
-        mlflow.log_metric(
-            "best_roc_auc_mean",
-            results_df.iloc[0]["roc_auc_mean"],
-        )
-        mlflow.log_metric(
-            "best_pr_auc_mean",
-            results_df.iloc[0]["pr_auc_mean"],
-        )
+        log_params({"selected_model": best_model_name})
+        log_metrics({
+            "best_roc_auc_mean": results_df.iloc[0]["roc_auc_mean"],
+            "best_pr_auc_mean":results_df.iloc[0]["pr_auc_mean"],
+         })
 
     best_model_name = results_df.iloc[0]["model"]
 
