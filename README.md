@@ -227,6 +227,10 @@ Swagger Docs:
 
 http://127.0.0.1:8000/docs
 
+**Base URL (AWS EC2):**
+
+http://18.188.0.152:8000
+
 ### Available Endpoints
 
 - `GET /`
@@ -270,7 +274,18 @@ Example response:
 ```
 
 ---
+## ☁️ Deployment
 
+The application is deployed on an AWS EC2 instance, making the API publicly accessible.
+
+This demonstrates a complete end-to-end machine learning workflow:
+
+Model training
+Model serialization
+API development
+Cloud deployment
+
+---
 ## 🔬 MLflow Experiment Tracking
 
 This project uses MLflow to track machine learning experiments.
@@ -352,20 +367,5 @@ Monitor monthly:
 - Business churn rate
 - API latency
 - API errors
-
----
-
-## 🛠️ Future Improvements
-
-- Hyperparameter tuning
-- Explainability with SHAP
-- Docker deployment
-- CI/CD pipeline
-- Cloud deployment
-- Real-time inference
-- Threshold optimization
-- Structured logging
-- Latency middleware
-- Production monitoring
 
 ---
